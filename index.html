@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ロス枚数計算表</title>
+    <style>
+        /* 全体のスタイル */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f7;
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+        }
+
+        .app-container {
+            width: 100%;
+            height: 100dvh; 
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 20px 16px 32px 16px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 28px;
+            color: #333333;
+            margin: 0 0 24px 0;
+            padding-bottom: 12px;
+            border-bottom: 3px solid #007AFF;
+        }
+
+        .inputs-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            flex-grow: 1;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #555555;
+            margin-bottom: 8px;
+        }
+
+        /* 入力欄とプルダウンのスタイル */
+        input[type="number"], select {
+            width: 100%;
+            height: 64px;
+            font-size: 24px;
+            border: 2px solid #cccccc;
+            border-radius: 12px;
+            box-sizing: border-box;
+            background-color: #fafafa;
+            color: #333333;
+            text-align: center;
+            text-align-last: center;
+            transition: border-color 0.2s;
+        }
+
+        select {
+            cursor: pointer;
+            appearance: auto;
+        }
+
+        input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: #007AFF;
+            background-color: #ffffff;
+        }
+
+        /* 選択肢に戻すボタンのスタイル */
+        .reset-btn {
+            background-color: transparent;
+            border: none;
+            color: #007AFF;
+            font-size: 16px;
+            margin-top: 12px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: bold;
+            padding: 8px;
+        }
+
+        /* 結果表示エリア */
+        .result-box {
+            margin-top: auto;
+            background-color: #eef5ff;
+            border: 2px solid #cce0ff;
+            border-radius: 16px;
+            padding: 32px 16px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.1);
+        }
+
+        .result-label {
+            font-size: 18px;
+            color: #0056b3;
+            margin-bottom: 12px;
+            font-weight: bold;
+        }
+
+        .result-value {
+            font-size: 48px;
+            font-weight: bold;
+            color: #007AFF;
+            word-break: break-all;
+            line-height: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <h1>ロス枚数計算表</h1>
+
+        <div class="inputs-wrapper">
+            <div class="input-group">
+                <label for="discharge-qty">排出数量</label>
+                <input type="number" id="discharge-qty" placeholder="0" oninput="calculate()">
+            </div>
+
+            <div class="input-group">
+                <label>W数</label>
+                <select id="w-select" onchange="handleWChange()">
+                    <option value="20">20</option>
+                    <option value="30">30</option>
+                    <option value="50">50</option>
+                    <option value="80">80</option>
+                    <option value="100">100</option>
+                    <option value="custom">＋ 直接入力する...</option>
+                </select>
+                <input type="number" id="w-input" placeholder="任意の数字を入力" oninput="calculate()" style="display: none;">
+                <button id="w-reset" class="reset-btn" onclick="resetWSelect()" style="display: none;">▼ プルダウンに戻す</button>
+            </div>
+
+            <div class="input-group">
+                <label for="cut-count">カット数</label>
+                <select id="cut-count" onchange="calculate()" oninput="calculate()">
+                    <option value="3">3</option>
+                    <option value="7">7</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="result-box">
+            <div class="result-label">計算結果</div>
+            <div class="result-value" id="result-display">0</div>
+        </div>
+    </div>
+
+    <script>
+        // W数のプルダウンで「直接入力」が選ばれたときの処理
+        function handleWChange() {
+            const select = document.getElementById('w-select');
+            const input = document.getElementById('w-input');
+            const resetBtn = document.getElementById('w-reset');
+
+            if (select.value === 'custom') {
+                // プルダウンを隠して、入力欄と戻るボタンを表示する
+                select.style.display = 'none';
+                input.style.display = 'block';
+                resetBtn.style.display = 'block';
+                input.value = ''; // 入力欄を空にする
+                input.focus();    // そのままキーボードを開く
+            }
+            calculate();
+        }
+
+        // 「プルダウンに戻す」ボタンが押されたときの処理
+        function resetWSelect() {
+            const select = document.getElementById('w-select');
+            const input = document.getElementById('w-input');
+            const resetBtn = document.getElementById('w-reset');
+
+            // 入力欄を隠して、プルダウンを再度表示する
+            select.style.display = 'block';
+            input.style.display = 'none';
+            resetBtn.style.display = 'none';
+            select.value = '20'; // 初期値の20に戻す
+            calculate();
+        }
+
+        // 計算処理
+        function calculate() {
+            const dischargeQty = Number(document.getElementById('discharge-qty').value) || 0;
+            const cutCount = Number(document.getElementById('cut-count').value) || 0;
+            
+            let wNumber = 0;
+            const select = document.getElementById('w-select');
+            
+            // プルダウンが隠れている（直接入力モード）かどうかで値の取得先を変える
+            if (select.style.display === 'none') {
+                wNumber = Number(document.getElementById('w-input').value) || 0;
+            } else {
+                wNumber = Number(select.value) || 0;
+            }
+
+            const total = dischargeQty * wNumber * cutCount;
+            document.getElementById('result-display').textContent = total.toLocaleString();
+        }
+
+        // 初期計算の実行
+        window.onload = calculate;
+    </script>
+
+</body>
+</html>
